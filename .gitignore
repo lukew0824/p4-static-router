@@ -1,2 +1,7 @@
 proto
 py
+_deps
+CMakeFiles
+.cmake
+CMakeCache.txt
+Makefile

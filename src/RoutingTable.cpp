@@ -1,5 +1,4 @@
 #include "RoutingTable.h"
-
 #include <arpa/inet.h>
 #include <fstream>
 #include <sstream>
@@ -39,9 +38,32 @@ RoutingTable::RoutingTable(const std::filesystem::path& routingTablePath) {
 }
 
 std::optional<RoutingEntry> RoutingTable::getRoutingEntry(ip_addr ip) {
-    // TODO: Your code below
+    std::optional<RoutingEntry> bestMatch = std::nullopt;
+    uint32_t longestPrefixLength = 0;
 
-    return routingEntries[0]; // Placeholder
+    for (const auto& entry : routingEntries) {
+        uint32_t maskedDestIp = entry.dest & entry.mask;
+        uint32_t maskedIp = ip & entry.mask;
+
+        spdlog::info("Checking entry: dest = {}, mask = {}, iface = {}", entry.dest, entry.mask, entry.iface);
+        spdlog::info("Masked Destination: {}, Masked IP: {}", maskedDestIp, maskedIp);
+
+        if (maskedDestIp == maskedIp) {
+            uint32_t prefixLength = __builtin_popcount(entry.mask);
+            spdlog::info("Prefix match found with prefix length: {}", prefixLength);
+
+            if (prefixLength > longestPrefixLength) {
+                bestMatch = entry;
+                longestPrefixLength = prefixLength;
+                spdlog::info("Best match updated: iface = {}, prefix length = {}", entry.iface, prefixLength);
+            }
+        }
+    }
+
+    if (!bestMatch) {
+        spdlog::info("No matching entry found for IP: {}", ip);
+    }
+    return bestMatch;
 }
 
 RoutingInterface RoutingTable::getRoutingInterface(const std::string& iface) {
